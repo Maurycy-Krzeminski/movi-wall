@@ -1,5 +1,7 @@
 use std::mem::size_of;
 use std::process::Command;
+use std::thread;
+use std::time::Duration;
 
 use windows::core::s;
 use windows::Win32::Foundation::HWND;
@@ -21,6 +23,8 @@ use windows::Win32::UI::WindowsAndMessaging::SET_WINDOW_POS_FLAGS;
 use windows::Win32::UI::WindowsAndMessaging::SetWindowPos;
 use windows::Win32::UI::WindowsAndMessaging::FindWindowA;
 use windows::Win32::UI::WindowsAndMessaging::GetWindowRect;
+
+
 fn main() {
     let pattern = std::env::args().nth(1).expect("no file to play given ");
     let args = vec!["--player-operation-mode=pseudo-gui", "--force-window=yes", "--fs", "--terminal=no", "--no-audio", "--loop=inf", pattern.as_str()];
@@ -84,7 +88,10 @@ fn get_window() -> HWND {
     };
     println!("get window: {:#?}", window);
     match window {
-        HWND(0) => return get_window(),
+        HWND(0) => return {
+            thread::sleep(Duration::from_millis(4000));
+            get_window()
+        },
         _ => return window, 
     }
 }
