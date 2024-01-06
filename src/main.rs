@@ -83,6 +83,13 @@ fn main() {
 }
 
 fn get_window() -> HWND {
+    return get_window_inner(0);
+}
+
+fn get_window_inner(arg: i32) -> HWND {
+    if arg >=10 {
+        panic!("Failed to find mpv player")
+    }
     let window =     unsafe{
         FindWindowA(s!("mpv"), None)
     };
@@ -90,7 +97,7 @@ fn get_window() -> HWND {
     match window {
         HWND(0) => return {
             thread::sleep(Duration::from_millis(4000));
-            get_window()
+            get_window_inner(1)
         },
         _ => return window, 
     }
