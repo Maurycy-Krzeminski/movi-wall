@@ -24,19 +24,26 @@ use windows::Win32::UI::WindowsAndMessaging::SetParent;
 use windows::Win32::UI::WindowsAndMessaging::SetWindowPos;
 use windows::Win32::UI::WindowsAndMessaging::SET_WINDOW_POS_FLAGS;
 
-fn main() {
-    let pattern = std::env::args().nth(1).expect("no file to play given ");
-    let args = vec![
-        "--player-operation-mode=pseudo-gui",
-        "--force-window=yes",
-        "--fs",
-        "--terminal=no",
-        "--no-audio",
-        "--loop-playlist=inf",
-        "--image-display-duration=5",
-        pattern.as_str(),
-    ];
+use clap::Parser;
 
+#[derive(Parser, Debug)] // requires `derive` feature
+#[command(term_width = 0)] // Just to make testing across clap features easier
+struct Args {
+    #[arg(short = 'w')]
+    wallpaper: String,
+
+    #[arg(short = 'a')]
+    audio: Option<bool>,
+
+    #[arg(short = 'd')]
+    image_display_duration: Option<u8>,
+
+    #[arg(short = 'l', value_name = "LOOP")]
+    loopp: Option<bool>,
+}
+
+fn main() {
+    let args = get_mpv_args();
     let output = Command::new("mpv").args(&args).spawn();
 
     match output {
@@ -77,6 +84,35 @@ fn main() {
 
     let parent_res = unsafe { SetParent(window, HWND(worker_w)) };
     println!("parent_res  {:#?}", parent_res);
+}
+
+fn get_mpv_args() -> Vec<String> {
+    let args = Args::parse();
+    println!("{args:?}");
+
+    let mut mpv_args: Vec<String> = vec![
+        "--player-operation-mode=pseudo-gui".to_string(),
+        "--force-window=yes".to_string(),
+        "--fs".to_string(),
+        "--terminal=no".to_string(),
+    ];
+
+    match args.audio.unwrap_or_else(|| false) {
+        true => (),
+        false => mpv_args.push("--no-audio".to_string()),
+    }
+
+    match args.loopp.unwrap_or_else(|| true) {
+        true => mpv_args.push("--loop-playlist=inf".to_string()),
+        false => (),
+    }
+
+    let time = args.image_display_duration.unwrap_or_else(|| 5);
+    mpv_args.push(format!("--image-display-duration={:?}", time));
+
+    mpv_args.push(args.wallpaper);
+
+    return mpv_args;
 }
 
 fn get_window() -> HWND {
