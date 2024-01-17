@@ -33,7 +33,7 @@ fn main() {
         "--terminal=no",
         "--no-audio",
         "--loop-playlist=inf",
-        "--image-display-duration=5"
+        "--image-display-duration=5",
         pattern.as_str(),
     ];
 
